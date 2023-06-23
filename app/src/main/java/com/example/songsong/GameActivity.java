@@ -25,6 +25,7 @@ import java.util.Random;
 
 public class GameActivity extends AppCompatActivity {
 
+    private TextView hintTextView;
     private TextView songTitleTextView;
     private TextView artistTextView;
     private TextView timerTextView;
@@ -78,6 +79,8 @@ public class GameActivity extends AppCompatActivity {
                 checkAnswer();
             }
         });
+
+        hintTextView = findViewById(R.id.hintTextView);
 
         startGame();
 
@@ -133,11 +136,11 @@ public class GameActivity extends AppCompatActivity {
                 public void onTick(long millisUntilFinished) {
                     timerTextView.setText(String.valueOf(millisUntilFinished / 1000));
 
-                    if (!hint1Shown && millisUntilFinished <= 30000) { // 30초 남았을 때 힌트 출력
+                    if (!hint1Shown && millisUntilFinished <= 40000) { // 40초 남았을 때 힌트 출력
                         showHint(currentSong.getHint1());
                         hint1Shown = true;
                     }
-                    else if (!hint2Shown && millisUntilFinished <= 15000) { // 15초 남았을 때 힌트 출력
+                    else if (!hint2Shown && millisUntilFinished <= 20000) { // 20초 남았을 때 힌트 출력
                         showHint(currentSong.getHint2());
                         hint2Shown = true;
                     }
@@ -166,7 +169,15 @@ public class GameActivity extends AppCompatActivity {
             } catch (IOException e) {
                 e.printStackTrace();
             }
+            clearHints();
         }
+    }
+
+    private void clearHints() {
+        // 힌트 초기화 작업을 수행합니다.
+        // 힌트 관련 변수나 UI를 초기화하는 등의 작업을 진행하면 됩니다.
+        // 예를 들어, 아래와 같이 힌트 텍스트뷰를 초기화할 수 있습니다.
+        hintTextView.setText("");
     }
 
     private void nextQuestion() {
@@ -203,6 +214,10 @@ public class GameActivity extends AppCompatActivity {
             }
             mediaPlayer.reset();
 
+            // 정답란 지우기
+            songEditText.setText("");
+            artistEditText.setText("");
+
             startGame();
         } else {
             Toast.makeText(this, "오답입니다!", Toast.LENGTH_SHORT).show();
@@ -210,7 +225,8 @@ public class GameActivity extends AppCompatActivity {
     }
 
     private void showHint(String hint) {
-        Toast.makeText(this, "힌트: " + hint, Toast.LENGTH_SHORT).show();
+        hintTextView.setText("힌트: " + hint);
+        hintTextView.setVisibility(View.VISIBLE);
     }
 
 

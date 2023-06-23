@@ -6,6 +6,13 @@
     tools:context=".GameActivity">
 
     <TextView
+        android:textSize="15sp"
+        android:id="@+id/hintTextView"
+        android:layout_width="300dp"
+        android:layout_height="150dp"
+        android:visibility="gone" />
+
+    <TextView
         android:id="@+id/songTitleTextView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
