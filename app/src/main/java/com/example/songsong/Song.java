@@ -1,20 +1,22 @@
 package com.example.songsong;
 
 public class Song {
+    public String filename;
     private int number;
     private String song;
     private String singer;
-    private String filename;
     private String hint1;
     private String hint2;
+    private String imageLink;
 
-    public Song(int number, String song, String singer, String filename, String hint1, String hint2) {
+    public Song(int number, String song, String singer, String filename, String hint1, String hint2, String imageLink) {
         this.number = number;
         this.song = song;
         this.singer = singer;
         this.filename = filename;
         this.hint1 = hint1;
         this.hint2 = hint2;
+        this.imageLink = imageLink;
     }
 
     public int getNumber() {
@@ -37,8 +39,12 @@ public class Song {
         return hint2;
     }
 
-    public String fileName() {
-        // split the fileName by dot and return the first part (i.e., the name without extension)
-        return filename.split("\\.")[0];
+    public String getFilename() {
+        return filename;
     }
+
+    public String getImageLink() {
+        return imageLink;
+    }
+
 }

@@ -1,15 +1,16 @@
 package com.example.songsong;
 
-import android.annotation.SuppressLint;
-import android.content.Context;
 import android.content.res.AssetFileDescriptor;
-import android.media.AudioManager;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.media.MediaPlayer;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -19,6 +20,8 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -26,14 +29,17 @@ import java.util.Random;
 public class GameActivity extends AppCompatActivity {
 
     private TextView hintTextView;
+    private ImageView imageView;
     private TextView songTitleTextView;
     private TextView artistTextView;
     private TextView timerTextView;
     private TextView remainingQuestionsTextView;
     private EditText songEditText;
     private EditText artistEditText;
+    private TextView correctCountTextView;
+    private TextView wrongCountTextView;
     private Button checkButton;
-
+    private LoadImageTask loadImageTask;
     private List<Song> songList;
     private List<Song> remainingQuestions;
     private boolean hint1Shown = false;
@@ -41,17 +47,18 @@ public class GameActivity extends AppCompatActivity {
     private Song currentSong;
     private int answeredQuestions;
     private int totalQuestions;
-    private AudioManager audioManager;
-
+    private int wrongQuestions = 0;
     private CountDownTimer timer;
     private MediaPlayer mediaPlayer;
+    private int correctQuestions;
 
-    @SuppressLint("MissingInflatedId")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_game);
-
+        correctCountTextView = findViewById(R.id.correctCountTextView);
+        wrongCountTextView = findViewById(R.id.wrongCountTextView);
+        imageView = findViewById(R.id.imageView);
         songTitleTextView = findViewById(R.id.songTitleTextView);
         artistTextView = findViewById(R.id.artistTextView);
         timerTextView = findViewById(R.id.timerTextView);
@@ -61,11 +68,15 @@ public class GameActivity extends AppCompatActivity {
         checkButton = findViewById(R.id.checkButton);
 
         songList = loadSongListFromCSV();
+        if (songList == null) {
+            Toast.makeText(this, "Failed to load song list", Toast.LENGTH_LONG).show();
+            finish();
+            return;
+        }
         remainingQuestions = new ArrayList<>(songList);
         answeredQuestions = 0;
         totalQuestions = songList.size();
-
-        audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+        wrongQuestions = 0;
 
         mediaPlayer = new MediaPlayer();
 
@@ -84,12 +95,33 @@ public class GameActivity extends AppCompatActivity {
     @Override
     public void onBackPressed() {
         super.onBackPressed();
+        releaseMediaPlayer();
+        cancelLoadImageTask();
         finish();
+    }
+
+    private void cancelLoadImageTask() {
+        if (loadImageTask != null) {
+            loadImageTask.cancel(true);
+            loadImageTask = null;
+        }
+    }
+
+    private void releaseMediaPlayer() {
+        if (mediaPlayer != null) {
+            if (mediaPlayer.isPlaying()) {
+                mediaPlayer.stop();
+            }
+            mediaPlayer.release();
+            mediaPlayer = null;
+        }
     }
 
     @Override
     protected void onUserLeaveHint() {
         super.onUserLeaveHint();
+        releaseMediaPlayer();
+        cancelLoadImageTask();
         finish();
     }
 
@@ -104,39 +136,51 @@ public class GameActivity extends AppCompatActivity {
 
         currentSong = getRandomSong();
         if (currentSong != null) {
-            songTitleTextView.setText("");  // 가사 제목 숨기기
-            artistTextView.setText("");  // 가수 이름 숨기기
+            songTitleTextView.setText("");
+            artistTextView.setText("");
 
             int remainingQuestionCount = remainingQuestions.size();
             remainingQuestionsTextView.setText("남은 문제: " + remainingQuestionCount + "/" + totalQuestions);
 
+            correctCountTextView.setText("맞힌 문제: " + correctQuestions);
+            wrongCountTextView.setText("틀린 문제: " + wrongQuestions);
+
             if (timer != null) {
                 timer.cancel();
             }
-            timer = new CountDownTimer(60000, 1000) {
+            timer = new CountDownTimer(10000, 1000) {
                 @Override
                 public void onTick(long millisUntilFinished) {
                     timerTextView.setText(String.valueOf(millisUntilFinished / 1000));
 
-                    if (!hint1Shown && millisUntilFinished <= 40000) { // 40초 남았을 때 힌트 출력
+                    if (!hint1Shown && millisUntilFinished <= 8500) {
                         showHint(currentSong.getHint1());
                         hint1Shown = true;
-                    }
-                    else if (!hint2Shown && millisUntilFinished <= 20000) { // 20초 남았을 때 힌트 출력
+                    } else if (!hint2Shown && millisUntilFinished <= 8000) {
                         showHint(currentSong.getHint2());
                         hint2Shown = true;
+                    }
+                    if (millisUntilFinished <= 7500) {
+                        showImage();
+                    } else {
+                        hideImage();
                     }
                 }
 
                 @Override
                 public void onFinish() {
-                    timerTextView.setText("시간초과!");  // 시간 초과 메시지 표시
-                    nextQuestion();  // 다음 문제로 넘어가는 함수를 호출
+                    timerTextView.setText("시간초과!");
+                    Toast.makeText(GameActivity.this, "오답입니다!", Toast.LENGTH_SHORT).show();
+                    answeredQuestions++;
+                    wrongQuestions++; // 틀린 문제 수 증가
+                    showResult();
+                    remainingQuestions.remove(currentSong); // 남은 문제 수 감소
+                    nextQuestion();
                 }
             }.start();
 
             try {
-                String songFileName = currentSong.fileName(); // 수정: getSong() 대신 fileName() 호출
+                String songFileName = currentSong.getFilename();
                 AssetFileDescriptor afd = getResources().openRawResourceFd(getResources().getIdentifier(songFileName, "raw", getPackageName()));
 
                 mediaPlayer.reset();
@@ -148,6 +192,14 @@ public class GameActivity extends AppCompatActivity {
                     }
                 });
                 mediaPlayer.prepareAsync();
+
+                String imageLink = currentSong.getImageLink();
+                if (!imageLink.isEmpty()) {
+                    // 이미지를 가져오는 AsyncTask를 실행
+                    new LoadImageTask(imageView).execute(imageLink);
+                } else {
+                    hideImage();
+                }
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -155,26 +207,30 @@ public class GameActivity extends AppCompatActivity {
         }
     }
 
+    private void showImage() {
+        imageView.setVisibility(View.VISIBLE);
+    }
+
+    private void hideImage() {
+        imageView.setVisibility(View.GONE);
+    }
+
     private void clearHints() {
-        // 힌트 초기화 작업을 수행합니다.
-        // 힌트 관련 변수나 UI를 초기화하는 등의 작업을 진행하면 됩니다.
-        // 예를 들어, 아래와 같이 힌트 텍스트뷰를 초기화할 수 있습니다.
         hintTextView.setText("");
     }
 
     private void nextQuestion() {
-        // 이전 문제에 대한 처리
         if (mediaPlayer.isPlaying()) {
             mediaPlayer.stop();
         }
         mediaPlayer.reset();
 
-        // 다음 문제로
         startGame();
     }
 
     private void checkAnswer() {
         if (currentSong == null) {
+            Toast.makeText(this, "게임이 아직 시작되지 않았습니다.", Toast.LENGTH_SHORT).show();
             return;
         }
 
@@ -184,26 +240,35 @@ public class GameActivity extends AppCompatActivity {
         if (userSong.equalsIgnoreCase(currentSong.getSong())
                 && userArtist.equalsIgnoreCase(currentSong.getSinger())) {
             Toast.makeText(this, "정답입니다!", Toast.LENGTH_SHORT).show();
-            answeredQuestions++;
-            remainingQuestions.remove(currentSong);
-
-            if (timer != null) {
-                timer.cancel();
-            }
-
-            if (mediaPlayer.isPlaying()) {
-                mediaPlayer.stop();
-            }
-            mediaPlayer.reset();
-
-            // 정답란 지우기
-            songEditText.setText("");
-            artistEditText.setText("");
-
-            startGame();
+            correctQuestions++; // 맞힌 문제 개수 증가
         } else {
             Toast.makeText(this, "오답입니다!", Toast.LENGTH_SHORT).show();
+            wrongQuestions++; // 틀린 문제 개수 증가
         }
+
+        remainingQuestions.remove(currentSong);
+
+        if (timer != null) {
+            timer.cancel();
+        }
+
+        if (mediaPlayer.isPlaying()) {
+            mediaPlayer.stop();
+        }
+        mediaPlayer.reset();
+
+        songEditText.setText("");
+        artistEditText.setText("");
+
+        startGame();
+    }
+
+    private void showResult() {
+        int correctAnswers = answeredQuestions;
+        int wrongAnswers = wrongQuestions;
+
+        correctCountTextView.setText("맞힌 문제: " + correctAnswers);
+        wrongCountTextView.setText("틀린 문제: " + wrongAnswers);
     }
 
     private void showHint(String hint) {
@@ -211,13 +276,10 @@ public class GameActivity extends AppCompatActivity {
         hintTextView.setVisibility(View.VISIBLE);
     }
 
-
     private void finishGame() {
         Toast.makeText(this, "게임 종료!", Toast.LENGTH_SHORT).show();
-        if (mediaPlayer.isPlaying()) {
-            mediaPlayer.stop();
-        }
-        mediaPlayer.release();
+        releaseMediaPlayer();
+        cancelLoadImageTask();
     }
 
     private List<Song> loadSongListFromCSV() {
@@ -229,22 +291,23 @@ public class GameActivity extends AppCompatActivity {
             inputStream = getResources().openRawResource(R.raw.song);
             reader = new BufferedReader(new InputStreamReader(inputStream));
 
-            String line;
-
-            // skip the first line (header row)
+            // Skip the first line (header row)
             reader.readLine();
+
+            String line;
 
             while ((line = reader.readLine()) != null) {
                 String[] data = line.split(",");
-                if (data.length >= 6) {
+                if (data.length >= 7) {
                     int number = Integer.parseInt(data[0]);
                     String song = data[1];
                     String singer = data[2];
-                    String fileName = data[3];
+                    String fileName = data[3].replace(".mp3", "");  // Remove the file extension
                     String hint1 = data[4];
                     String hint2 = data[5];
+                    String imageLink = data[6];  // 이미지 링크 추가
 
-                    Song newSong = new Song(number, song, singer, fileName, hint1, hint2);
+                    Song newSong = new Song(number, song, singer, fileName, hint1, hint2, imageLink);
                     songList.add(newSong);
                 }
             }
@@ -261,9 +324,8 @@ public class GameActivity extends AppCompatActivity {
             }
         }
 
-        return songList;
+        return songList.size() > 0 ? songList : null;
     }
-
 
     private Song getRandomSong() {
         if (remainingQuestions.isEmpty()) {
@@ -273,5 +335,40 @@ public class GameActivity extends AppCompatActivity {
         Random random = new Random();
         int randomIndex = random.nextInt(remainingQuestions.size());
         return remainingQuestions.get(randomIndex);
+    }
+
+    private static class LoadImageTask extends AsyncTask<String, Void, Bitmap> {
+        private ImageView imageView;
+
+        LoadImageTask(ImageView imageView) {
+            this.imageView = imageView;
+        }
+
+        @Override
+        protected Bitmap doInBackground(String... urls) {
+            String imageUrl = urls[0];
+            Bitmap bitmap = null;
+            try {
+                URL url = new URL(imageUrl);
+                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+                connection.setDoInput(true);
+                connection.connect();
+                InputStream input = connection.getInputStream();
+                bitmap = BitmapFactory.decodeStream(input);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return bitmap;
+        }
+
+        @Override
+        protected void onPostExecute(Bitmap bitmap) {
+            if (bitmap != null) {
+                imageView.setImageBitmap(bitmap);
+                imageView.setVisibility(View.VISIBLE);
+            } else {
+                imageView.setVisibility(View.GONE);
+            }
+        }
     }
 }
