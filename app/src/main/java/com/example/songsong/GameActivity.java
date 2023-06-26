@@ -41,8 +41,6 @@ public class GameActivity extends AppCompatActivity {
     private Song currentSong;
     private int answeredQuestions;
     private int totalQuestions;
-    private Button volumeUpButton;
-    private Button volumeDownButton;
     private AudioManager audioManager;
 
     private CountDownTimer timer;
@@ -67,8 +65,6 @@ public class GameActivity extends AppCompatActivity {
         answeredQuestions = 0;
         totalQuestions = songList.size();
 
-        /*volumeUpButton = findViewById(R.id.volumeUpButton);
-        volumeDownButton = findViewById(R.id.volumeDownButton);*/
         audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
 
         mediaPlayer = new MediaPlayer();
@@ -83,20 +79,6 @@ public class GameActivity extends AppCompatActivity {
         hintTextView = findViewById(R.id.hintTextView);
 
         startGame();
-
-       /* volumeUpButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                increaseVolume();
-            }
-        });
-
-        volumeDownButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                decreaseVolume();
-            }
-        });*/
     }
 
     @Override
@@ -292,12 +274,4 @@ public class GameActivity extends AppCompatActivity {
         int randomIndex = random.nextInt(remainingQuestions.size());
         return remainingQuestions.get(randomIndex);
     }
-
-   /* private void increaseVolume() {
-        audioManager.adjustVolume(AudioManager.ADJUST_RAISE, AudioManager.FLAG_PLAY_SOUND);
-    }
-
-    private void decreaseVolume() {
-        audioManager.adjustVolume(AudioManager.ADJUST_LOWER, AudioManager.FLAG_PLAY_SOUND);
-    }*/
 }
