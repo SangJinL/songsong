@@ -1,5 +1,6 @@
 package com.example.songsong;
 
+import android.content.Intent;
 import android.content.res.AssetFileDescriptor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -27,6 +28,7 @@ import java.util.List;
 import java.util.Random;
 
 public class GameActivity extends AppCompatActivity {
+    private int wrongQuestionsCount = 100;
 
     private TextView hintTextView;
     private ImageView imageView;
@@ -51,6 +53,7 @@ public class GameActivity extends AppCompatActivity {
     private CountDownTimer timer;
     private MediaPlayer mediaPlayer;
     private int correctQuestions;
+    private boolean isCorrect;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -148,19 +151,19 @@ public class GameActivity extends AppCompatActivity {
             if (timer != null) {
                 timer.cancel();
             }
-            timer = new CountDownTimer(10000, 1000) {
+            timer = new CountDownTimer(90000, 1000) {
                 @Override
                 public void onTick(long millisUntilFinished) {
                     timerTextView.setText(String.valueOf(millisUntilFinished / 1000));
 
-                    if (!hint1Shown && millisUntilFinished <= 8500) {
+                    if (!hint1Shown && millisUntilFinished <= 60000) {
                         showHint(currentSong.getHint1());
                         hint1Shown = true;
-                    } else if (!hint2Shown && millisUntilFinished <= 8000) {
+                    } else if (!hint2Shown && millisUntilFinished <= 30000) {
                         showHint(currentSong.getHint2());
                         hint2Shown = true;
                     }
-                    if (millisUntilFinished <= 7500) {
+                    if (millisUntilFinished <= 15000) {
                         showImage();
                     } else {
                         hideImage();
@@ -225,6 +228,11 @@ public class GameActivity extends AppCompatActivity {
         }
         mediaPlayer.reset();
 
+        remainingQuestions.remove(currentSong); // 현재 문제를 제거합니다.
+
+        // 텍스트 필드를 비웁니다.
+        songEditText.setText("");
+        artistEditText.setText("");
         startGame();
     }
 
@@ -241,28 +249,37 @@ public class GameActivity extends AppCompatActivity {
                 && userArtist.equalsIgnoreCase(currentSong.getSinger())) {
             Toast.makeText(this, "정답입니다!", Toast.LENGTH_SHORT).show();
             correctQuestions++; // 맞힌 문제 개수 증가
+            remainingQuestions.remove(currentSong); // 정답을 맞혔으므로 현재 문제를 남은 문제에서 제외합니다.
+            if (timer != null) {
+                timer.cancel();
+            }
+            if (mediaPlayer.isPlaying()) {
+                mediaPlayer.stop();
+            }
+            mediaPlayer.reset();
+            nextQuestion(); // 정답을 맞혔으므로 다음 문제로 넘어갑니다.
         } else {
-            Toast.makeText(this, "오답입니다!", Toast.LENGTH_SHORT).show();
-            wrongQuestions++; // 틀린 문제 개수 증가
+            if (timerTextView.getText().equals("시간초과!")) {
+                Toast.makeText(this, "시간이 초과되어 다음 문제로 넘어갑니다.", Toast.LENGTH_SHORT).show();
+                remainingQuestions.remove(currentSong); // 시간이 초과되었으므로 현재 문제를 남은 문제에서 제외합니다.
+                wrongQuestions++; // 틀린 문제 개수 증가
+                if (timer != null) {
+                    timer.cancel();
+                }
+                if (mediaPlayer.isPlaying()) {
+                    mediaPlayer.stop();
+                }
+                mediaPlayer.reset();
+                nextQuestion(); // 시간이 초과되었으므로 다음 문제로 넘어갑니다.
+                remainingQuestions.remove(currentSong); // 현재 문제를 제거합니다.
+            } else {
+                Toast.makeText(this, "오답입니다!", Toast.LENGTH_SHORT).show();
+                // 오답을 입력했으므로 입력 필드를 초기화하고 같은 문제를 계속 유지합니다.
+                songEditText.setText("");
+                artistEditText.setText("");
+            }
         }
-
-        remainingQuestions.remove(currentSong);
-
-        if (timer != null) {
-            timer.cancel();
-        }
-
-        if (mediaPlayer.isPlaying()) {
-            mediaPlayer.stop();
-        }
-        mediaPlayer.reset();
-
-        songEditText.setText("");
-        artistEditText.setText("");
-
-        startGame();
     }
-
     private void showResult() {
         int correctAnswers = answeredQuestions;
         int wrongAnswers = wrongQuestions;
@@ -277,10 +294,17 @@ public class GameActivity extends AppCompatActivity {
     }
 
     private void finishGame() {
-        Toast.makeText(this, "게임 종료!", Toast.LENGTH_SHORT).show();
         releaseMediaPlayer();
         cancelLoadImageTask();
+
+        // 결과 액티비티로 이동
+        Intent intent = new Intent(GameActivity.this, ResultActivity.class);
+        intent.putExtra("correctCount", correctQuestions);
+        intent.putExtra("wrongCount", wrongQuestions);
+        startActivity(intent);
+        finish();
     }
+
 
     private List<Song> loadSongListFromCSV() {
         List<Song> songList = new ArrayList<>();

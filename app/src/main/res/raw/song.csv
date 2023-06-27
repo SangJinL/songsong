@@ -1,16 +1,16 @@
-﻿Number,Song,Singer,fileName,Hint1,Hint2
-1,고백,다이나믹듀오,goback.mp3,GoBack,최자와 개코
-2,멀어,프라이머리,too_distant.mp3,Too Distant,Primary
-3,빈차,에픽하이,home_is_far_away.mp3,Home is Far Away,오혁
-4,자니,프라이머리,johnny.mp3,Johnny,Primary
-5,밤편지,아이유,night_letter.mp3,Night Letter,반딧불
-6,우산,에픽하이,umbrella.mp3,umbrella,윤하
-7,첫사랑,버스커버스커,first_love.mp3,First Love,슈퍼스타 K
-8,응급실,이지,izi.mp3,izi,쾌걸춘향 OST
-9,어른,손디아,adult,나의 아저씨 OST,Sondia
-10,기억을 걷는 시간,넬,time_to_remember,태연,넬
-11,도망가자,선우정아,run_with_me,Run With Me,리메이크 곡
-12,주저하는 연인들을 위해,잔나비,for_lovers_who_hesitate,밴드,잔나비
-13,광화문에서,규현,at_gwanghwamun,광화문,규현
-14,뜨거운 여름밤은 지나가고 남은 건 볼품없지만,잔나비,summer,띄어쓰기 주의,뜨거운 여름밤은 ____ __ _ _____
-15,스물하나 스물다섯,자우림,2125,자우림,21 25
+﻿Number,Song,Singer,fileName,Hint1,Hint2,imageLink
+1,고백,다이나믹듀오,goback.mp3,GoBack,최자와 개코,https://image.bugsm.co.kr/album/images/130/80128/8012852.jpg
+2,멀어,프라이머리,too_distant.mp3,Too Distant,Primary,https://image.bugsm.co.kr/album/images/500/3456/345641.jpg
+3,빈차,에픽하이,home_is_far_away.mp3,Home is Far Away,오혁,https://cdnimg.melon.co.kr/cm/album/images/101/05/030/10105030_500.jpg?ebdf07cb0a796843c67b715cb86a9255
+4,자니,프라이머리,johnny.mp3,Johnny,Primary,https://image.bugsm.co.kr/album/images/500/3231/323110.jpg
+5,밤편지,아이유,night_letter.mp3,Night Letter,반딧불,https://cdnimg.melon.co.kr/cm/album/images/100/47/890/10047890_500.jpg?fe3170fcb1ac397fc072be5877d5f1b9
+6,우산,에픽하이,umbrella.mp3,umbrella,윤하,https://image.bugsm.co.kr/album/images/500/1567/156756.jpg
+7,첫사랑,버스커버스커,first_love.mp3,First Love,슈퍼스타 K,https://image.bugsm.co.kr/album/images/500/3246/324696.jpg
+8,응급실,izi,izi.mp3,izi,쾌걸춘향 OST,https://image.bugsm.co.kr/album/images/500/80048/8004829.jpg
+9,어른,손디아,adult,나의 아저씨 OST,Sondia,https://image.bugsm.co.kr/album/images/500/201567/20156782.jpg
+10,기억을 걷는 시간,넬,time_to_remember,태연,넬,https://image.bugsm.co.kr/album/images/500/1512/151262.jpg
+11,도망가자,선우정아,run_with_me,Run With Me,리메이크 곡 다수,https://image.bugsm.co.kr/album/images/500/202938/20293864.jpg
+12,주저하는 연인들을 위해,잔나비,for_lovers_who_hesitate,밴드,잔나비,https://image.bugsm.co.kr/album/images/500/202371/20237198.jpg
+13,광화문에서,규현,at_gwanghwamun,광화문,규현,https://image.bugsm.co.kr/album/images/500/4631/463165.jpg
+14,뜨거운 여름밤은 지나가고 남은 건 볼품없지만,잔나비,summer,띄어쓰기 주의,뜨거운 여름밤은 ____ __ _ _____,https://i.namu.wiki/i/qO_I0uYJ_7X8uiS2SfEMi-20XFJd6eA1HEl3QfxT2ZR9DujJOMuQCXzTCTvWwXfTXBSsGitYwdnINY9dH5eQEw.webp
+15,스물하나 스물다섯,자우림,a21_25,자우림,21 25,https://cdnimg.melon.co.kr/cm/album/images/022/10/557/2210557_500.jpg
